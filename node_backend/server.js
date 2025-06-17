@@ -45,7 +45,7 @@ app.use(cors({
 
 // MySQL connection
 const db = mysql.createConnection({
-  host: process.env.MYSQL_HOST || 'switchback.proxy.rlwy.net:',
+  host: process.env.MYSQL_HOST || 'switchback.proxy.rlwy.net',
   user: process.env.MYSQL_USER || 'root',
   password: process.env.MYSQL_PASSWORD || 'jQzrIcHDSWWTnpQcsvPQGqoMYVWQHkrF',
   database: process.env.MYSQL_DATABASE || 'railway',
