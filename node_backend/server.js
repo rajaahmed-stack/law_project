@@ -116,8 +116,8 @@ app.post('/api/send-email', (req, res) => {
   res.status(200).send('Email request received');
 });
 
-const accountSid = process.env.TWILIO_Account_Id;
-const authToken = process.env.TWILIO_Auth_Token;
+const accountSid = process.env.TWILIO_Account_Id || 'ACf0c1b3d2e4c5a6b7c8d9e0f1g2h3i4j5';
+const authToken = process.env.TWILIO_Auth_Token || '542f6a74d054485d9d6a4b8317cd2ed4';
 
 if (!accountSid || !authToken) {
   console.error("❌ Twilio credentials missing in environment variables!");
