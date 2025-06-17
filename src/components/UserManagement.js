@@ -31,7 +31,7 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("http://localhost:5000/api/users");
+      const response = await axios.get("https://lawproject-production.up.railway.app/api/users");
       console.log(response.data); // Check the response
       setUsers(response.data);
     } catch (error) {
@@ -54,7 +54,7 @@ const UserManagement = () => {
 
   const handleDeleteUser = async (userId) => {
     try {
-      await axios.delete(`https://constructionproject-production.up.railway.app/api/delete-users/${userId}`);
+      await axios.delete(`https://lawproject-production.up.railway.app/api/delete-users/${userId}`);
       message.success("User deleted successfully");
       setUsers(users.filter((user) => user.id !== userId));
     } catch (error) {
@@ -68,10 +68,10 @@ const UserManagement = () => {
     try {
       let response;
       if (currentUser) {
-        response = await axios.put(`https://constructionproject-production.up.railway.app/api/users/${currentUser.id}`, values);
+        response = await axios.put(`https://lawproject-production.up.railway.app/api/users/${currentUser.id}`, values);
         message.success("User updated successfully");
       } else {
-        response = await axios.post("https://constructionproject-production.up.railway.app/api/usermanagement/save_users", values);
+        response = await axios.post("https://lawproject-production.up.railway.app/api/usermanagement/save_users", values);
         message.success("User added successfully");
   
         // Send email after adding user
@@ -110,7 +110,7 @@ const UserManagement = () => {
     setLoading(false);
   };
   const sendEmail = (to, subject, text) => {
-    axios.post("https://constructionproject-production.up.railway.app/api/send-email", { to, subject, text })
+    axios.post("https://lawproject-production.up.railway.app/api/send-email", { to, subject, text })
       .then(() => {
         console.log("Email sent successfully");
       })

@@ -55,7 +55,7 @@ const Management = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/management/management-data")
+      .get("https://lawproject-production.up.railway.app/api/management/management-data")
       .then((response) => {
         setData(response.data);
         // Automatically select and filter "Work Receiving" department
@@ -72,7 +72,7 @@ const Management = () => {
       setSearchResult(data);
     } else {
       axios
-        .get(` http://localhost:5000/api/management/search-workorder/${searchTerm}`)
+        .get(`https://lawproject-production.up.railway.app/api/management/search-workorder/${searchTerm}`)
         .then((response) => setSearchResult(response.data))
         .catch((error) => console.error("Search error:", error));
     }
@@ -81,7 +81,7 @@ const Management = () => {
   const handleDepartmentFilter = (dept) => {
     setSelectedDept(dept);
     axios
-      .get(`http://localhost:5000/api/management/search-filter?value=${encodeURIComponent(dept)}`)
+      .get(`https://lawproject-production.up.railway.app/api/management/search-filter?value=${encodeURIComponent(dept)}`)
       .then((response) => setSearchResult(response.data))
       .catch((error) => console.error("Department filter error:", error));
   };
@@ -141,7 +141,7 @@ const handleSaveCase = () => {
   };
 
   axios
-  .put(`http://localhost:5000/api/management/edit-case/${rowBeingEdited}`, {
+  .put(`https://lawproject-production.up.railway.app/api/management/edit-case/${rowBeingEdited}`, {
     ...editedRowData,
     date_of_hearing: formatDate(editedRowData.date_of_hearing),
     case_register_date: formatDate(editedRowData.case_register_date)
@@ -225,47 +225,55 @@ const handleSaveCase = () => {
         <th>Actions</th> {/* Add Actions column */}
       </tr>
     </thead>
-    <tbody>
-      {searchResult.map((row, index) => (
-        <tr key={index}>
-          {getColumns(selectedDept).map((col) => (
-           <td key={col.accessor}>
-           {rowBeingEdited === row.case_num ? (
-             <input
-               type="text"
-               value={editedRowData[col.accessor] || ""}
-               onChange={(e) => handleInputChange(col.accessor, e.target.value)}
-             />
-           ) : (
-             (() => {
-               const cellValue = row[col.accessor];
-               if (cellValue === null || cellValue === undefined) return '';
-               if (typeof cellValue === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(cellValue)) {
-                 return new Date(cellValue).toISOString().slice(0, 10);
-               }
-               if (typeof cellValue === 'object') return JSON.stringify(cellValue);
-               return cellValue;
-             })()
-           )}
-         </td>
-         
-          ))}
-
-          <td>
-            {rowBeingEdited === row.case_num ? (
-              <button className="save-button" onClick={handleSaveCase}>
-                💾 Save
-              </button>
-            ) : (
-              <button className="edit-button" onClick={() => handleEditCase(row)}>
-                ✏️ Edit
-              </button>
-            )}
-          </td>
-
-        </tr>
+   <tbody>
+  {searchResult.map((row, index) => (
+    <tr
+      key={index}
+      onDoubleClick={() => {
+        if (row.file_path) {
+          // Open file in a new tab
+          window.open(row.file_path, "_blank");
+        } else {
+          alert("No file available for this row.");
+        }
+      }}
+      style={{ cursor: row.file_path ? "pointer" : "default" }}
+    >
+      {getColumns(selectedDept).map((col) => (
+        <td key={col.accessor}>
+          {rowBeingEdited === row.case_num ? (
+            <input
+              type="text"
+              value={editedRowData[col.accessor] || ""}
+              onChange={(e) => handleInputChange(col.accessor, e.target.value)}
+            />
+          ) : (
+            (() => {
+              const cellValue = row[col.accessor];
+              if (cellValue === null || cellValue === undefined) return '';
+              if (typeof cellValue === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(cellValue)) {
+                return new Date(cellValue).toISOString().slice(0, 10);
+              }
+              if (typeof cellValue === 'object') return JSON.stringify(cellValue);
+              return cellValue;
+            })()
+          )}
+        </td>
       ))}
-    </tbody>
+      <td>
+        {rowBeingEdited === row.case_num ? (
+          <button className="save-button" onClick={handleSaveCase}>
+            💾 Save
+          </button>
+        ) : (
+          <button className="edit-button" onClick={() => handleEditCase(row)}>
+            ✏️ Edit
+          </button>
+        )}
+      </td>
+    </tr>
+  ))}
+</tbody>
   </table>
 )}
 

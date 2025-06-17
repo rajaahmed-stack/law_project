@@ -45,7 +45,7 @@ const WorkRceiving  = () => {
   useEffect(() => {
     const fetchCases = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/legal_cases');
+        const res = await fetch('https://lawproject-production.up.railway.app/api/legal_cases');
         const data = await res.json();
         setLegalCases(data);
       } catch (error) {
@@ -74,7 +74,7 @@ const WorkRceiving  = () => {
   
       files.forEach(file => formPayload.append('file_path', file)); // match backend multer field
   
-      const response = await fetch('http://localhost:5000/api/save-LegalCases', {
+      const response = await fetch('https://lawproject-production.up.railway.app/api/save-LegalCases', {
         method: 'POST',
         body: formPayload,
       });
@@ -85,7 +85,7 @@ const WorkRceiving  = () => {
       }
       
       // Send WhatsApp notification
-      await fetch('http://localhost:5000/api/send-whatsapp', {
+      await fetch('https://lawproject-production.up.railway.app/api/send-whatsapp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

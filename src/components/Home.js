@@ -67,7 +67,7 @@ const toggleChat = () => setIsChatOpen(prev => !prev);
   const [userName, setUser] = useState("Guest");
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/users")
+    axios.get("https://lawproject-production.up.railway.app/api/users")
       .then((res) => {
         if (res.data.length > 0) {
          const latestUser = res.data[res.data.length - 1]; // Get the last user added
@@ -88,10 +88,10 @@ const toggleChat = () => setIsChatOpen(prev => !prev);
     const fetchAllData = async () => {
       try {
         const [statsRes, ordersRes, chartStatsRes, usersRes] = await Promise.all([
-          axios.get("https://constructionproject-production.up.railway.app/api/stats"),
-          axios.get("https://constructionproject-production.up.railway.app/api/recent-work-orders"),
-          axios.get("https://constructionproject-production.up.railway.app/api/chart-stats"),
-          axios.get("https://constructionproject-production.up.railway.app/api/users"), // Optional if you want users
+          axios.get("https://lawproject-production.up.railway.app/api/stats"),
+          axios.get("https://lawproject-production.up.railway.app/api/recent-work-orders"),
+          axios.get("https://lawproject-production.up.railway.app/api/chart-stats"),
+          axios.get("https://lawproject-production.up.railway.app/api/users"), // Optional if you want users
         ]);
   
         setStats(statsRes.data);
@@ -124,37 +124,71 @@ const toggleChat = () => setIsChatOpen(prev => !prev);
   
     fetchAllData();
   }, []);
+  // const handleTextGuidance = async () => {
+  //   if (!userQuery.trim()) return;
+  
+  //   setMessages(prev => [...prev, { sender: 'user', text: userQuery }]);
+  
+  //   try {
+  //     const response = await axios.post('https://vivacious-encouragement-production-c947.up.railway.app/generate_text', {
+  //       text: `Format this response clearly and professionally for legal purposes. Use sections, bullet points if needed, and bold headers. Write in formal English. Task: ${userQuery}`,
+  //     });
+  
+  //     setMessages(prev => [
+  //       ...prev,
+  //       { sender: 'ai', text: response.data.generated_text },
+  //     ]);
+  //   } catch (error) {
+  //     console.error('Error getting guidance:', error);
+  //     setMessages(prev => [
+  //       ...prev,
+  //       { sender: 'ai', text: 'Sorry, an error occurred. Please try again.' },
+  //     ]);
+  //   }
+  
+  //   setUserQuery('');
+  // };
   const handleTextGuidance = async () => {
-    if (!userQuery.trim()) return;
-  
-    setMessages(prev => [...prev, { sender: 'user', text: userQuery }]);
-  
-    try {
-      const response = await axios.post('http://127.0.0.1:5000/generate_text', {
-        text: `Format this response clearly and professionally for legal purposes. Use sections, bullet points if needed, and bold headers. Write in formal English. Task: ${userQuery}`,
-      });
-  
-      setMessages(prev => [
-        ...prev,
-        { sender: 'ai', text: response.data.generated_text },
-      ]);
-    } catch (error) {
-      console.error('Error getting guidance:', error);
-      setMessages(prev => [
-        ...prev,
-        { sender: 'ai', text: 'Sorry, an error occurred. Please try again.' },
-      ]);
-    }
-  
-    setUserQuery('');
-  };
-  
+  if (!userQuery.trim()) return;
+
+  setMessages(prev => [...prev, { sender: 'user', text: userQuery }]);
+
+  try {
+    const isLegalQuery = userQuery.toLowerCase().includes("case") ||
+                         userQuery.toLowerCase().includes("court") ||
+                         userQuery.toLowerCase().includes("judge");
+
+    const endpoint = isLegalQuery 
+      ? 'https://your-server.com/ask_case_ai'
+      : 'https://your-server.com/generate_text';
+
+    const payload = isLegalQuery
+      ? { question: userQuery, case_num: null }
+      : { text: userQuery };
+
+    const response = await axios.post(endpoint, payload);
+
+    setMessages(prev => [
+      ...prev,
+      { sender: 'ai', text: response.data.generated_text },
+    ]);
+  } catch (error) {
+    console.error('Error getting guidance:', error);
+    setMessages(prev => [
+      ...prev,
+      { sender: 'ai', text: 'Sorry, an error occurred. Please try again.' },
+    ]);
+  }
+
+  setUserQuery('');
+};
+
   
   const handleImageGeneration = async () => {
     if (!userQuery.trim()) return;
   
     try {
-      const response = await axios.post('https://127.0.0.1:5000/generate_image', {
+      const response = await axios.post('https://vivacious-encouragement-production-c947.up.railway.app/generate_image', {
         prompt: userQuery,
       });
   
@@ -178,14 +212,14 @@ const toggleChat = () => setIsChatOpen(prev => !prev);
     return date && !isNaN(new Date(date).getTime());
   }
   useEffect(() => {
-    axios.get("http://localhost:5000/api/todos").then(res => setTodos(res.data));
+    axios.get("https://lawproject-production.up.railway.app/api/todos").then(res => setTodos(res.data));
   }, []);
 
   // const handleSubmit = (e) => {
   //   e.preventDefault();
-  //   axios.post("http://localhost:5000/api/todos", formData).then(() => {
+  //   axios.post("https://lawproject-production.up.railway.app/api/todos", formData).then(() => {
   //     setFormData({ title: "", description: "", due_date: "" });
-  //     return axios.get("http://localhost:5000/api/todos");
+  //     return axios.get("https://lawproject-production.up.railway.app/api/todos");
   //   }).then(res => setTodos(res.data));
   // };
   const [showForm, setShowForm] = useState(false);
@@ -212,7 +246,7 @@ const toggleChat = () => setIsChatOpen(prev => !prev);
   const [recentCases, setRecentCases] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/recent-cases")
+    axios.get("https://lawproject-production.up.railway.app/api/recent-cases")
       .then((res) => setRecentCases(res.data))
       .catch((err) => console.error("Error fetching recent cases:", err));
   }, []);
@@ -228,7 +262,7 @@ const toggleChat = () => setIsChatOpen(prev => !prev);
   
     if (formType === 'todo') {
       try {
-        const response = await axios.post('https://localhost:5000/api/todos', newEntry);
+        const response = await axios.post('https://lawproject-production.up.railway.app/api/todos', newEntry);
         console.log('To-do saved:', response.data);
       } catch (error) {
         console.error('Error saving to-do:', error);
@@ -247,7 +281,7 @@ const toggleChat = () => setIsChatOpen(prev => !prev);
     setShowForm(false);
   };
   useEffect(() => {
-    axios.get('http://localhost:5000/api/stats')
+    axios.get('https://lawproject-production.up.railway.app/api/stats')
       .then(res => setStats(res.data))
       .catch(err => console.error('Failed to fetch stats', err));
   }, []);

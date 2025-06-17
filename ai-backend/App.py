@@ -1,24 +1,84 @@
 import os
 import google.generativeai as genai
+import mysql.connector
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-# Initialize Flask app
-app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
-
-# Configure API key and check if it's loaded correctly
-api_key = os.getenv('GOOGLE_API_KEY')
-if not api_key:
-    print("API Key not found. Please set the GOOGLE_API_KEY environment variable.")
-else:
-    print("API Key successfully loaded.")
-
+# Load API Key
+api_key = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=api_key)
 
+# Initialize Flask App
+app = Flask(__name__)
+CORS(app)
+
+# MySQL Database Config
+db_config = {
+    'host': 'switchback.proxy.rlwy.net',
+    'user': 'root',
+    'password': 'jQzrIcHDSWWTnpQcsvPQGqoMYVWQHkrF',
+    'database': 'railway',
+    'port': 50403
+}
+
+# Function to fetch all legal cases or specific ones
+def get_case_data(case_num=None):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+
+    if case_num:
+        cursor.execute("SELECT * FROM LegalCases WHERE case_num = %s", (case_num,))
+    else:
+        cursor.execute("SELECT * FROM LegalCases ORDER BY create_at DESC LIMIT 10")
+
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result
+
+# 🔍 Ask AI About Legal Cases
+@app.route('/ask_case_ai', methods=['POST'])
+def ask_case_ai():
+    try:
+        data = request.get_json()
+        query = data.get("question", "")
+        case_num = data.get("case_num", None)
+
+        cases = get_case_data(case_num)
+        if not cases:
+            return jsonify({'error': 'No matching cases found.'}), 404
+
+        case_text = "\n\n".join([f"""
+📁 Case #{c['case_num']} - {c['case_title']}
+- Court: {c['court']}
+- Judge: {c['current_judge']}
+- Nature: {c['nature_of_case']}
+- Status: {c['stage_and_status']}
+- Client: {c['client_name']} ({c['client_cnic']})
+- Description: {c['file_description']}
+""" for c in cases])
+
+        prompt = f"""You're a legal assistant. Based on the following case(s), answer this user query:
+User Query: "{query}"
+
+CASE DETAILS:
+{case_text}
+
+Respond in formal, structured legal format.
+"""
+
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        response = model.generate_content(prompt)
+
+        return jsonify({'generated_text': response.text})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/')
-def index():
-    return "Welcome to the Gemini API with Imagen support!"
+def home():
+    return 'Legal AI Backend is running.'
+
 
 # Generate text using Gemini API
 @app.route('/generate_text', methods=['POST'])
