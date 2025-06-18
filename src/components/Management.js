@@ -257,49 +257,76 @@ const handleSaveCase = () => {
   {searchResult.map((row, index) => (
     <tr
       key={index}
-     onDoubleClick={() => {
-      console.log("Trying to open:", row.file_path);  // 🔍 Debug log
-      if (row.file_path && typeof row.file_path === 'string') {
-        window.open(row.file_path.url, "_blank");
-      } else {
-        alert("No file available for this row or file path is invalid.");
-      }
-    }}
+   onDoubleClick={() => {
+  try {
+    if (row.file_path && typeof row.file_path === "string") {
+      // Handle multiple file URLs (comma-separated)
+      const paths = row.file_path.split(',');
+      paths.forEach(path => {
+        const url = path.trim().startsWith("http") ? path.trim() : `${window.location.origin}${path.trim()}`;
+        window.open(url, "_blank");
+      });
+    } else {
+      alert("No file available or file path is invalid.");
+    }
+  } catch (err) {
+    console.error("Error opening file:", err);
+    alert("Error opening file.");
+  }
+}}
+
+
+
 
       style={{ cursor: row.file_path ? "pointer" : "default" }}
     >
-      {getColumns(selectedDept).map((col) => (
-        <td key={col.accessor}>
-          {rowBeingEdited === row.case_num ? (
-  <>
-    <input
-      type="text"
-      value={editedRowData[col.accessor] || ""}
-      onChange={(e) => handleInputChange(col.accessor, e.target.value)}
-      style={{ width: "120px" }}
-    />
-    {col.accessor === "file_path" && (
-      <input
-        type="file"
-        multiple
-        onChange={(e) => handleInputChange("file_path", e.target.files)}
-        style={{ marginTop: "5px" }}
-      />
+     {getColumns(selectedDept).map((col) => (
+  <td key={col.accessor}>
+    {rowBeingEdited === row.case_num ? (
+      <>
+        <input
+          type="text"
+          value={editedRowData[col.accessor] || ""}
+          onChange={(e) => handleInputChange(col.accessor, e.target.value)}
+          style={{ width: "120px" }}
+        />
+        {col.accessor === "file_path" && (
+          <input
+            type="file"
+            multiple
+            onChange={(e) => handleInputChange("file_path", e.target.files)}
+            style={{ marginTop: "5px" }}
+          />
+        )}
+      </>
+    ) : (
+      (() => {
+        const cellValue = row[col.accessor];
+        if (col.accessor === "case_num") {
+          return (
+            <a
+              href={`https://lawproject-production.up.railway.app/api/download/${cellValue}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              download
+              style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
+              onClick={(e) => e.stopPropagation()} // prevent double-click row conflict
+            >
+              {cellValue}
+            </a>
+          );
+        }
+        if (cellValue === null || cellValue === undefined) return '';
+        if (typeof cellValue === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(cellValue)) {
+          return new Date(cellValue).toISOString().slice(0, 10);
+        }
+        if (typeof cellValue === 'object') return JSON.stringify(cellValue);
+        return cellValue;
+      })()
     )}
-  </>
-) : (
-  (() => {
-    const cellValue = row[col.accessor];
-    if (cellValue === null || cellValue === undefined) return '';
-    if (typeof cellValue === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(cellValue)) {
-      return new Date(cellValue).toISOString().slice(0, 10);
-    }
-    if (typeof cellValue === 'object') return JSON.stringify(cellValue);
-    return cellValue;
-  })()
-)}
-        </td>
-      ))}
+  </td>
+))}
+
       <td>
         {rowBeingEdited === row.case_num ? (
           <button className="save-button" onClick={handleSaveCase}>

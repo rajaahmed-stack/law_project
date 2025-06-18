@@ -284,7 +284,7 @@ app.get("/api/todos", (req, res) => {
 app.get('/api/download/:id', (req, res) => {
   const fileId = req.params.id;
 
-  db.query('SELECT file_path FROM work_receiving WHERE work_order_id = ?', [fileId], (err, results) => {
+  db.query('SELECT file_path FROM LegalCases WHERE work_order_id = ?', [fileId], (err, results) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).send('Database error');
