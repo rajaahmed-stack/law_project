@@ -25,8 +25,11 @@ const PasswordGate = () => {
       const response = await axios.get(`https://lawproject-production.up.railway.app/api/users`);
       const users = response.data;
 
-      const user = users.find(u => u.username === formData.username && u.password === formData.password);
-
+      const user = users.find(
+        u =>
+          u.username.trim().toLowerCase() === formData.username.trim().toLowerCase() &&
+          u.password.trim() === formData.password.trim()
+      );
       if (user) {
         login();
         alert(`Welcome back, ${user.username}!`);

@@ -422,9 +422,21 @@ app.delete('/api/delete-users/:id', (req, res) => {
 });
 
 // Define API route for fetching users
-app.get('/api/users', (req, res) => {
+app.get('/api/clients', (req, res) => {
     // Assuming you want to fetch users from a database or some data source
     const query = 'SELECT  client_name , client_phone , client_address ,client_cnic  FROM LegalCases'; // Adjust based on your database schema
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Database query error:', err);
+            res.status(500).send('Error fetching users');
+        } else {
+            res.json(results);
+        }
+    });
+});
+app.get('/api/users', (req, res) => {
+    // Assuming you want to fetch users from a database or some data source
+    const query = 'SELECT  *  FROM users'; // Adjust based on your database schema
     db.query(query, (err, results) => {
         if (err) {
             console.error('Database query error:', err);

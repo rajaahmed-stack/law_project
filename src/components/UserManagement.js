@@ -31,7 +31,7 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("https://lawproject-production.up.railway.app/api/users");
+      const response = await axios.get("https://lawproject-production.up.railway.app/api/clients");
       console.log(response.data); // Check the response
       setUsers(response.data);
     } catch (error) {
