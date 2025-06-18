@@ -1,8 +1,9 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
+  RewriteBase /lawproject/
 
   # Don't rewrite API requests
-  RewriteCond %{REQUEST_URI} ^/api/
+  RewriteCond %{REQUEST_URI} ^/lawproject/api/
   RewriteRule ^ - [L]
 
   # Allow existing files or directories
