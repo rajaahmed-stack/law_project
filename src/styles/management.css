@@ -4,10 +4,14 @@
   font-family: Arial, sans-serif;
 }
 
-.management-table {
-  width: 100%;
-  margin-top: 20px;
-  border-collapse: collapse;
+.management-table input {
+  width: 120px;
+  font-size: 12px;
+}
+
+.table-scroll-wrapper {
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 .management-table th,

@@ -130,7 +130,7 @@ router.get('/search-filter', (req, res) => {
   });
 });
 
-router.put('/edit-case/:id', (req, res) => {
+router.put('/edit-case/:id', upload.array('file_path', 10), (req, res) => {
   const { id } = req.params;
   const {
     case_title,
@@ -149,26 +149,38 @@ router.put('/edit-case/:id', (req, res) => {
     client_cnic
   } = req.body;
 
-  // Validate required fields (optional)
   if (!case_title || !court || !date_of_hearing) {
     return res.status(400).send('Missing required fields');
   }
 
-  const query = `
+  // Collect file paths if files uploaded
+  let filePaths = null;
+  if (req.files && req.files.length > 0) {
+    filePaths = req.files.map(file => `/uploads/${file.filename}`).join(',');
+  }
+
+  // Build query and values dynamically
+  let query = `
     UPDATE LegalCases SET
       case_title = ?, court = ?, date_of_hearing = ?, case_register_date = ?, current_judge = ?,
       nature_of_case = ?, representing = ?, stage_and_status = ?, file_in_possession = ?, file_description = ?,
       client_name = ?, client_phone = ?, client_address = ?, client_cnic = ?
-    WHERE case_num = ?
   `;
-
   const values = [
     case_title, court, date_of_hearing, case_register_date, current_judge,
     nature_of_case, representing, stage_and_status, file_in_possession, file_description,
-    client_name, client_phone, client_address, client_cnic,
-    id // this is case_num in WHERE clause
+    client_name, client_phone, client_address, client_cnic
   ];
 
+  if (filePaths) {
+    query += `, file_path = ?`;
+    values.push(filePaths);
+  }
+
+  query += ` WHERE case_num = ?`;
+  values.push(id);
+
+  // Execute DB update
   db.query(query, values, (err, result) => {
     if (err) {
       console.error('Error updating case:', err);

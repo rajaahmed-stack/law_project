@@ -127,37 +127,64 @@ const handleSaveCase = () => {
     case_title, court, date_of_hearing, case_register_date,
     current_judge, nature_of_case, representing, stage_and_status,
     file_in_possession, file_description, client_name,
-    client_phone, client_address, client_cnic
+    client_phone, client_address, client_cnic, file_path // include file here
   } = editedRowData;
 
   if (!case_title || !court || !date_of_hearing) {
     alert("Some required fields are missing.");
     return;
   }
+
   const formatDate = (input) => {
     if (!input) return "";
     const date = new Date(input);
-    return date.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+    return date.toISOString().slice(0, 10);
   };
 
-  axios
-  .put(`https://lawproject-production.up.railway.app/api/management/edit-case/${rowBeingEdited}`, {
-    ...editedRowData,
-    date_of_hearing: formatDate(editedRowData.date_of_hearing),
-    case_register_date: formatDate(editedRowData.case_register_date)
-  })
-  .then(() => {
-    alert("Case updated successfully");
-    handleDepartmentFilter("Cases Details");
-    setRowBeingEdited(null);
-    setEditedRowData({});
-  })
-  .catch((error) => {
-    console.error("Update error:", error);
-    alert("Failed to update case");
-  });
+  // Create FormData to support file upload
+  const formData = new FormData();
+  formData.append("case_title", case_title);
+  formData.append("court", court);
+  formData.append("date_of_hearing", formatDate(date_of_hearing));
+  formData.append("case_register_date", formatDate(case_register_date));
+  formData.append("current_judge", current_judge);
+  formData.append("nature_of_case", nature_of_case);
+  formData.append("representing", representing);
+  formData.append("stage_and_status", stage_and_status);
+  formData.append("file_in_possession", file_in_possession);
+  formData.append("file_description", file_description);
+  formData.append("client_name", client_name);
+  formData.append("client_phone", client_phone);
+  formData.append("client_address", client_address);
+  formData.append("client_cnic", client_cnic);
 
+  // Append file only if new file is selected
+  if (file_path instanceof File) {
+    formData.append("file_path", file_path);
+  }
+
+  axios
+    .put(
+      `https://lawproject-production.up.railway.app/api/management/edit-case/${rowBeingEdited}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    )
+    .then(() => {
+      alert("Case updated successfully");
+      handleDepartmentFilter("Cases Details");
+      setRowBeingEdited(null);
+      setEditedRowData({});
+    })
+    .catch((error) => {
+      console.error("Update error:", error);
+      alert("Failed to update case");
+    });
 };
+
 
 
   return (
@@ -216,8 +243,9 @@ const handleSaveCase = () => {
 
       {/* --- Table --- */}
       {getColumns(selectedDept).length > 0 && (
-      <table className="management-table">
-      <thead>
+<div className="table-scroll-wrapper">
+  <table className="management-table">
+          <thead>
       <tr>
         {getColumns(selectedDept).map((col) => (
           <th key={col.accessor}>{col.header}</th>
@@ -229,35 +257,47 @@ const handleSaveCase = () => {
   {searchResult.map((row, index) => (
     <tr
       key={index}
-      onDoubleClick={() => {
-        if (row.file_path) {
-          // Open file in a new tab
-          window.open(row.file_path, "_blank");
-        } else {
-          alert("No file available for this row.");
-        }
-      }}
+     onDoubleClick={() => {
+      console.log("Trying to open:", row.file_path);  // 🔍 Debug log
+      if (row.file_path && typeof row.file_path === 'string') {
+        window.open(row.file_path.url, "_blank");
+      } else {
+        alert("No file available for this row or file path is invalid.");
+      }
+    }}
+
       style={{ cursor: row.file_path ? "pointer" : "default" }}
     >
       {getColumns(selectedDept).map((col) => (
         <td key={col.accessor}>
           {rowBeingEdited === row.case_num ? (
-            <input
-              type="text"
-              value={editedRowData[col.accessor] || ""}
-              onChange={(e) => handleInputChange(col.accessor, e.target.value)}
-            />
-          ) : (
-            (() => {
-              const cellValue = row[col.accessor];
-              if (cellValue === null || cellValue === undefined) return '';
-              if (typeof cellValue === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(cellValue)) {
-                return new Date(cellValue).toISOString().slice(0, 10);
-              }
-              if (typeof cellValue === 'object') return JSON.stringify(cellValue);
-              return cellValue;
-            })()
-          )}
+  <>
+    <input
+      type="text"
+      value={editedRowData[col.accessor] || ""}
+      onChange={(e) => handleInputChange(col.accessor, e.target.value)}
+      style={{ width: "120px" }}
+    />
+    {col.accessor === "file_path" && (
+      <input
+        type="file"
+        multiple
+        onChange={(e) => handleInputChange("file_path", e.target.files)}
+        style={{ marginTop: "5px" }}
+      />
+    )}
+  </>
+) : (
+  (() => {
+    const cellValue = row[col.accessor];
+    if (cellValue === null || cellValue === undefined) return '';
+    if (typeof cellValue === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(cellValue)) {
+      return new Date(cellValue).toISOString().slice(0, 10);
+    }
+    if (typeof cellValue === 'object') return JSON.stringify(cellValue);
+    return cellValue;
+  })()
+)}
         </td>
       ))}
       <td>
@@ -275,6 +315,7 @@ const handleSaveCase = () => {
   ))}
 </tbody>
   </table>
+  </div>
 )}
 
       {/* --- Download Button --- */}
