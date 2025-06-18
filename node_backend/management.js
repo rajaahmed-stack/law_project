@@ -192,6 +192,7 @@ router.put('/edit-case/:id', upload.array('file_path', 10), (req, res) => {
 router.get('/api/download/:id', (req, res) => {
   const fileId = req.params.id;
 
+  // Corrected WHERE clause to match your actual table column
   db.query('SELECT file_path FROM LegalCases WHERE case_num = ?', [fileId], (err, results) => {
     if (err) {
       console.error('Database error:', err);
@@ -239,4 +240,5 @@ router.get('/api/download/:id', (req, res) => {
     }
   });
 });
+
 module.exports = router;
