@@ -22,7 +22,7 @@ const PasswordGate = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.get(`http://localhost:5000/api/users`);
+      const response = await axios.get(`https://lawproject-production.up.railway.app/api/users`);
       const users = response.data;
 
       const user = users.find(u => u.username === formData.username && u.password === formData.password);
@@ -48,7 +48,7 @@ const PasswordGate = () => {
         return;
       }
 
-      await axios.post(`http://localhost:5000/api/save_users`, {
+      await axios.post(`https://lawproject-production.up.railway.app/api/save_users`, {
         username: formData.username,
         password: formData.password,
         email: formData.email,
