@@ -38,7 +38,7 @@ const usermanagement = require('./usermanagement');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin: ['http://localhost:3000'],
+  origin: ['https://mmcmadina.com/lawproject/'],
   methods: 'GET,POST,PUT,DELETE',
   allowedHeaders: ['Content-Type']
 }));

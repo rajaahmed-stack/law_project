@@ -27,7 +27,7 @@ import PrivateRoute from "./components/PrivateRoute";
 
 const App = () => (
   <AuthProvider> {/* 👈 Wrap everything inside AuthProvider */}
-    <Router>
+<Router basename="/lawproject">
       <Routes>
         <Route path="/" element={<PasswordGate />} />
         {/* <Route path="/NavBar" element={<NavBar />} /> */}

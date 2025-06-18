@@ -4,15 +4,22 @@ import mysql.connector
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-# Load API Key
-api_key = os.getenv("GOOGLE_API_KEY")
+# Initialize Flask app
+app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "https://mmcmadina.com/lawproject/"}})
+
+# Configure API key and check if it's loaded correctly
+api_key = os.getenv('GOOGLE_API_KEY')
+if not api_key:
+    print("API Key not found. Please set the GOOGLE_API_KEY environment variable.")
+else:
+    print("API Key successfully loaded.")
+
 genai.configure(api_key=api_key)
 
-# Initialize Flask App
-app = Flask(__name__)
-CORS(app)
-
-# MySQL Database Config
+@app.route('/')
+def index():
+    return "Welcome to the Gemini API with Imagen support!"
 db_config = {
     'host': 'switchback.proxy.rlwy.net',
     'user': 'root',
@@ -78,8 +85,6 @@ Respond in formal, structured legal format.
 @app.route('/')
 def home():
     return 'Legal AI Backend is running.'
-
-
 # Generate text using Gemini API
 @app.route('/generate_text', methods=['POST'])
 def generate_text():
@@ -138,3 +143,21 @@ def generate_image():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
+import os
+import google.generativeai as genai
+import mysql.connector
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+
+# Load API Key
+api_key = os.getenv("GOOGLE_API_KEY")
+genai.configure(api_key=api_key)
+
+# Initialize Flask App
+app = Flask(__name__)
+CORS(app)
+
+# MySQL Database Config
