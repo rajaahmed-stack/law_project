@@ -49,7 +49,10 @@ const db = mysql.createConnection({
   user: process.env.MYSQL_USER || 'root',
   password: process.env.MYSQL_PASSWORD || 'jQzrIcHDSWWTnpQcsvPQGqoMYVWQHkrF',
   database: process.env.MYSQL_DATABASE || 'railway',
-  port: process.env.MYSQL_PORT || '50403'
+  port: process.env.MYSQL_PORT || '50403',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 
 });
 
