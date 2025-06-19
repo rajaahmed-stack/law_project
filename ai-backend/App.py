@@ -171,6 +171,10 @@ if not api_key:
 else:
     print("✅ GOOGLE_API_KEY loaded.")
     genai.configure(api_key=api_key)
+    
+@app.route('/api/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok"})
 
 # === MySQL Config ===
 db_config = {
@@ -181,9 +185,7 @@ db_config = {
     'port': 50403
 }
 
-@app.route('/health', methods=['GET'])
-def health():
-    return jsonify({"status": "ok"})
+
 
 @app.route('/ask_case_ai', methods=['POST'])
 def ask_case_ai():
