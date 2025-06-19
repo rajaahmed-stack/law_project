@@ -160,8 +160,8 @@ const toggleChat = () => setIsChatOpen(prev => !prev);
                          userQuery.toLowerCase().includes("judge");
 
     const endpoint = isLegalQuery 
-      ? 'https://your-server.com/ask_case_ai'
-      : 'https://your-server.com/generate_text';
+      ? 'https://vivacious-encouragement-production-c947.up.railway.app/api/ask_case_ai'
+      : 'https://vivacious-encouragement-production-c947.up.railway.app/api/generate_text';
 
     const payload = isLegalQuery
       ? { question: userQuery, case_num: null }

@@ -143,22 +143,10 @@ def generate_image():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)), debug=True)
 
 
 
-import os
-import google.generativeai as genai
-import mysql.connector
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 
-# Load API Key
-api_key = os.getenv("GOOGLE_API_KEY")
-genai.configure(api_key=api_key)
-
-# Initialize Flask App
-app = Flask(__name__)
-CORS(app)
 
 # MySQL Database Config
