@@ -151,6 +151,7 @@ const toggleChat = () => setIsChatOpen(prev => !prev);
   const handleTextGuidance = async () => {
   if (!userQuery.trim()) return;
 
+  // Show user message
   setMessages(prev => [...prev, { sender: 'user', text: userQuery }]);
 
   try {
@@ -168,20 +169,36 @@ const toggleChat = () => setIsChatOpen(prev => !prev);
 
     const response = await axios.post(endpoint, payload);
 
-    setMessages(prev => [
-      ...prev,
-      { sender: 'ai', text: response.data.generated_text },
-    ]);
+    // ✅ Response logic handling
+    if (response.data?.generated_text) {
+      setMessages(prev => [
+        ...prev,
+        { sender: 'ai', text: response.data.generated_text },
+      ]);
+    } else if (response.data?.error) {
+      setMessages(prev => [
+        ...prev,
+        { sender: 'ai', text: `⚠️ Error: ${response.data.error}` },
+      ]);
+    } else {
+      setMessages(prev => [
+        ...prev,
+        { sender: 'ai', text: "⚠️ No valid response received from AI." },
+      ]);
+    }
+
   } catch (error) {
-    console.error('Error getting guidance:', error);
+    console.error('❌ Error getting guidance:', error);
     setMessages(prev => [
       ...prev,
-      { sender: 'ai', text: 'Sorry, an error occurred. Please try again.' },
+      { sender: 'ai', text: '❌ Server error or no internet connection. Please try again later.' },
     ]);
   }
 
+  // Reset input
   setUserQuery('');
 };
+
 
   
   const handleImageGeneration = async () => {

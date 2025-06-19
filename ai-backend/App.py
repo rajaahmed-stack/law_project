@@ -53,7 +53,8 @@ def ask_case_ai():
 
         cases = get_case_data(case_num)
         if not cases:
-            return jsonify({'error': 'No matching cases found.'}), 404
+            return jsonify({'generated_text': f'⚠️ No case found with number {case_num}.'})
+
 
         case_text = "\n\n".join([f"""
 📁 Case #{c['case_num']} - {c['case_title']}
