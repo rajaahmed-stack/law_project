@@ -282,7 +282,23 @@ app.get("/api/todos", (req, res) => {
     res.json(results);
   });
 });
+app.get('/api/management-data', (req, res) => {
+    const query = `
+        SELECT 
+         
+        * FROM LegalCases 
+    `;
 
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Database query error:', err);
+      res.status(500).send('Database query error');
+    } else {
+      console.log('Legal Cases Fetching Data:', results);  // Log the results
+      res.json(results);
+    }
+  });
+});
 // Download file by work_order_id
 app.get('/api/download/:id', (req, res) => {
   const fileId = req.params.id;
