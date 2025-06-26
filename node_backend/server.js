@@ -316,8 +316,6 @@ app.get('/api/download-file/:id', (req, res) => {
     }
 
     let filePath = results[0].file_path;
-
-    // Convert buffer to string if needed
     if (Buffer.isBuffer(filePath)) {
       filePath = filePath.toString('utf8');
     }
@@ -330,11 +328,10 @@ app.get('/api/download-file/:id', (req, res) => {
     const filePaths = filePath.split(',').map(fp => fp.trim());
     console.log('📁 File paths from DB:', filePaths);
 
-    // Helper: safely resolve file path from /uploads folder
-    const resolveFromUploads = (fileName) =>
-      path.resolve(__dirname, 'uploads', path.basename(fileName));
+    // 👇 FIX: Use only the file name from DB and append it to uploads/
+    const resolveFromUploads = (fp) =>
+      path.resolve(__dirname, 'uploads', path.basename(fp));
 
-    // Handle single file
     if (filePaths.length === 1) {
       const absPath = resolveFromUploads(filePaths[0]);
       console.log('📄 Resolved file path:', absPath);
@@ -344,29 +341,27 @@ app.get('/api/download-file/:id', (req, res) => {
         return res.status(404).send('File not found on server');
       }
 
-      return res.download(absPath, path.basename(absPath), (err) => {
-        if (err) console.error('❌ Download error:', err);
+      return res.download(absPath);
+    } else {
+      const archive = archiver('zip', { zlib: { level: 9 } });
+      res.attachment(`files_${fileId}.zip`);
+      archive.pipe(res);
+
+      filePaths.forEach(fp => {
+        const fullPath = resolveFromUploads(fp);
+        if (fs.existsSync(fullPath)) {
+          console.log('📦 Adding to ZIP:', fullPath);
+          archive.file(fullPath, { name: path.basename(fp) });
+        } else {
+          console.warn('❌ File missing, skipping:', fullPath);
+        }
       });
+
+      archive.finalize();
     }
-
-    // Handle multiple files - ZIP them
-    const archive = archiver('zip', { zlib: { level: 9 } });
-    res.attachment(`files_${fileId}.zip`);
-    archive.pipe(res);
-
-    filePaths.forEach(fp => {
-      const fullPath = resolveFromUploads(fp);
-      if (fs.existsSync(fullPath)) {
-        console.log('📦 Adding to ZIP:', fullPath);
-        archive.file(fullPath, { name: path.basename(fp) });
-      } else {
-        console.warn('❌ Skipping missing file:', fullPath);
-      }
-    });
-
-    archive.finalize();
   });
 });
+
 // Update current department
 
 
