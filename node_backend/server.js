@@ -302,47 +302,61 @@ app.get('/api/management-data', (req, res) => {
 // Download file by work_order_id
 app.get('/api/download/:id', (req, res) => {
   const fileId = req.params.id;
+  console.log('🔍 Requested File ID:', fileId);
 
   db.query('SELECT file_path FROM LegalCases WHERE case_num = ?', [fileId], (err, results) => {
     if (err) {
-      console.error('Database error:', err);
+      console.error('❌ Database error:', err);
       return res.status(500).send('Database error');
     }
 
     if (results.length === 0) {
+      console.warn('⚠️ No file found for ID:', fileId);
       return res.status(404).send('File not found');
     }
 
     let filePath = results[0].file_path;
+    console.log('📁 Raw file path from DB:', filePath);
 
-    // Convert buffer to string if needed
     if (Buffer.isBuffer(filePath)) {
       filePath = filePath.toString('utf8');
     }
 
-    const filePaths = filePath.split(',');
+    if (!filePath) {
+      console.warn('⚠️ File path is empty');
+      return res.status(400).send('Invalid file path');
+    }
+
+    const filePaths = filePath.split(',').map(fp => fp.trim());
+    console.log('📁 File paths to handle:', filePaths);
 
     if (filePaths.length === 1) {
-      // Single file
-      const absolutePath = path.resolve(filePaths[0]);
+      // 🗂 Single file download
+      const relativePath = path.join(__dirname, 'database', filePaths[0]); // Ensure it's inside "database" folder
+      const absolutePath = path.resolve(relativePath);
+      console.log('📄 Absolute file path:', absolutePath);
+
       if (!fs.existsSync(absolutePath)) {
+        console.warn('❌ File does not exist on server:', absolutePath);
         return res.status(404).send('File not found on server');
       }
 
-      return res.download(absolutePath);
-    } else {
-      // Multiple files — create a zip
-      const archive = archiver('zip', {
-        zlib: { level: 9 }
+      return res.download(absolutePath, (err) => {
+        if (err) console.error('❌ Download error:', err);
       });
-
+    } else {
+      // 📦 Multiple files — zip
+      const archive = archiver('zip', { zlib: { level: 9 } });
       res.attachment(`files_${fileId}.zip`);
       archive.pipe(res);
 
       filePaths.forEach(p => {
-        const absPath = path.resolve(p);
-        if (fs.existsSync(absPath)) {
-          archive.file(absPath, { name: path.basename(p) });
+        const fullPath = path.resolve(__dirname, 'database', p);
+        if (fs.existsSync(fullPath)) {
+          console.log('📦 Adding to ZIP:', fullPath);
+          archive.file(fullPath, { name: path.basename(p) });
+        } else {
+          console.warn('❌ File missing, skipping:', fullPath);
         }
       });
 
@@ -350,7 +364,6 @@ app.get('/api/download/:id', (req, res) => {
     }
   });
 });
-
 
 // Update current department
 
