@@ -300,7 +300,7 @@ app.get('/api/management-data', (req, res) => {
   });
 });
 // Download file by work_order_id
-app.get('/api/download/:id', (req, res) => {
+app.get('/api/download-file/:id', (req, res) => {
   const fileId = req.params.id;
   console.log('🔍 Requested File ID:', fileId);
 
@@ -323,46 +323,48 @@ app.get('/api/download/:id', (req, res) => {
     }
 
     if (!filePath) {
-      console.warn('⚠️ Empty file path in DB');
+      console.warn('⚠️ Empty file path');
       return res.status(400).send('Invalid file path');
     }
 
     const filePaths = filePath.split(',').map(fp => fp.trim());
-    console.log('📁 File paths to handle:', filePaths);
+    console.log('📁 File paths from DB:', filePaths);
 
-    // Helper to resolve files inside /uploads directory
-    const resolveFromUploads = (p) => path.resolve(__dirname, 'uploads', path.basename(p));
+    // Helper: safely resolve file path from /uploads folder
+    const resolveFromUploads = (fileName) =>
+      path.resolve(__dirname, 'uploads', path.basename(fileName));
 
+    // Handle single file
     if (filePaths.length === 1) {
-      const absolutePath = resolveFromUploads(filePaths[0]);
-      console.log('📄 Single file path:', absolutePath);
+      const absPath = resolveFromUploads(filePaths[0]);
+      console.log('📄 Resolved file path:', absPath);
 
-      if (!fs.existsSync(absolutePath)) {
-        console.warn('❌ File does not exist:', absolutePath);
+      if (!fs.existsSync(absPath)) {
+        console.warn('❌ File not found on server:', absPath);
         return res.status(404).send('File not found on server');
       }
 
-      return res.download(absolutePath, (err) => {
+      return res.download(absPath, path.basename(absPath), (err) => {
         if (err) console.error('❌ Download error:', err);
       });
-    } else {
-      // Multiple files – ZIP them
-      const archive = archiver('zip', { zlib: { level: 9 } });
-      res.attachment(`files_${fileId}.zip`);
-      archive.pipe(res);
-
-      filePaths.forEach((fp) => {
-        const fullPath = resolveFromUploads(fp);
-        if (fs.existsSync(fullPath)) {
-          console.log('📦 Adding to ZIP:', fullPath);
-          archive.file(fullPath, { name: path.basename(fp) });
-        } else {
-          console.warn('❌ File missing, skipping:', fullPath);
-        }
-      });
-
-      archive.finalize();
     }
+
+    // Handle multiple files - ZIP them
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    res.attachment(`files_${fileId}.zip`);
+    archive.pipe(res);
+
+    filePaths.forEach(fp => {
+      const fullPath = resolveFromUploads(fp);
+      if (fs.existsSync(fullPath)) {
+        console.log('📦 Adding to ZIP:', fullPath);
+        archive.file(fullPath, { name: path.basename(fp) });
+      } else {
+        console.warn('❌ Skipping missing file:', fullPath);
+      }
+    });
+
+    archive.finalize();
   });
 });
 // Update current department
