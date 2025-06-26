@@ -316,28 +316,29 @@ app.get('/api/download/:id', (req, res) => {
     }
 
     let filePath = results[0].file_path;
-    console.log('📁 Raw file path from DB:', filePath);
 
+    // Convert buffer to string if needed
     if (Buffer.isBuffer(filePath)) {
       filePath = filePath.toString('utf8');
     }
 
     if (!filePath) {
-      console.warn('⚠️ File path is empty');
+      console.warn('⚠️ Empty file path in DB');
       return res.status(400).send('Invalid file path');
     }
 
     const filePaths = filePath.split(',').map(fp => fp.trim());
     console.log('📁 File paths to handle:', filePaths);
 
+    // Helper to resolve files inside /uploads directory
+    const resolveFromUploads = (p) => path.resolve(__dirname, 'uploads', path.basename(p));
+
     if (filePaths.length === 1) {
-      // 🗂 Single file download
-      const relativePath = path.join(__dirname, 'database', filePaths[0]); // Ensure it's inside "database" folder
-      const absolutePath = path.resolve(relativePath);
-      console.log('📄 Absolute file path:', absolutePath);
+      const absolutePath = resolveFromUploads(filePaths[0]);
+      console.log('📄 Single file path:', absolutePath);
 
       if (!fs.existsSync(absolutePath)) {
-        console.warn('❌ File does not exist on server:', absolutePath);
+        console.warn('❌ File does not exist:', absolutePath);
         return res.status(404).send('File not found on server');
       }
 
@@ -345,16 +346,16 @@ app.get('/api/download/:id', (req, res) => {
         if (err) console.error('❌ Download error:', err);
       });
     } else {
-      // 📦 Multiple files — zip
+      // Multiple files – ZIP them
       const archive = archiver('zip', { zlib: { level: 9 } });
       res.attachment(`files_${fileId}.zip`);
       archive.pipe(res);
 
-      filePaths.forEach(p => {
-        const fullPath = path.resolve(__dirname, 'database', p);
+      filePaths.forEach((fp) => {
+        const fullPath = resolveFromUploads(fp);
         if (fs.existsSync(fullPath)) {
           console.log('📦 Adding to ZIP:', fullPath);
-          archive.file(fullPath, { name: path.basename(p) });
+          archive.file(fullPath, { name: path.basename(fp) });
         } else {
           console.warn('❌ File missing, skipping:', fullPath);
         }
@@ -364,7 +365,6 @@ app.get('/api/download/:id', (req, res) => {
     }
   });
 });
-
 // Update current department
 
 
